@@ -1,0 +1,12 @@
+name: my_ai_project
+channels:
+  - defaults
+dependencies:
+  - python=3.8
+  - numpy
+  - pandas
+  - scikit-learn
+  - jupyter
+  - matplotlib
+  - seaborn
+  # Add any additional dependencies here

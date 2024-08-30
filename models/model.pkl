@@ -1,0 +1,5 @@
+The contents of the file `/my_ai_project/my_ai_project/models/model.pkl` should be:
+
+This file is intentionally left blank.
+
+Please note that the `.pkl` file is typically used to store serialized or trained models, so you would need to generate and save your trained model using appropriate libraries and techniques specific to your AI project.
