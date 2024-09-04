@@ -1,34 +1,35 @@
-# src/load_model.py
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoTokenizer, AutoModelForCausalLM
+import torch
 
-# Specify the model name
-model_name = 'scb10x/typhoon-7b'
+model_id = "scb10x/llama-3-typhoon-v1.5x-8b-instruct"
 
-# Load the model
-model = AutoModelForCausalLM.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+model = AutoModelForCausalLM.from_pretrained(
+    model_id,
+    torch_dtype=torch.bfloat16,
+    device_map="auto",
+)
 
-# Load the tokenizer
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+messages = [{'role': 'user', 'content': 'สวัสดี'}]  # add message here
 
-# Print a success message
-print("Model and tokenizer loaded successfully.")
+input_ids = tokenizer.apply_chat_template(
+    messages,
+    add_generation_prompt=True,
+    return_tensors="pt"
+).to(model.device)
 
-def chat_with_model(prompt, max_length=50):
-    # Encode the input prompt
-    inputs = tokenizer(prompt, return_tensors='pt')
+terminators = [
+    tokenizer.eos_token_id,
+    tokenizer.convert_tokens_to_ids("<|eot_id|>")
+]
 
-    # Generate a response
-    outputs = model.generate(inputs['input_ids'], max_length=max_length, num_return_sequences=1)
-
-    # Decode the generated tokens back to text
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    return response
-
-# Example usage
-if __name__ == "__main__":
-    while True:
-        prompt = input("You: ")
-        if prompt.lower() in ["exit", "quit"]:
-            break
-        response = chat_with_model(prompt)
-        print(f"Model: {response}")
+outputs = model.generate(
+    input_ids,
+    max_new_tokens=512,
+    eos_token_id=terminators,
+    do_sample=True,
+    temperature=0.4,
+    top_p=0.95,
+)
+response = outputs[0][input_ids.shape[-1]:]
+print(tokenizer.decode(response, skip_special_tokens=True))
